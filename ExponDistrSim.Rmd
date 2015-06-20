@@ -3,9 +3,9 @@ title: "Exponential Distribution Simulation"
 author: "MattDSquared"
 date: "Saturday, June 20, 2015"
 output:
+  word_document: default
   html_document:
     keep_md: yes
-  word_document: default
 ---
 As part of the Statistical Inference class on Coursera, this project investigates the exponential distribution in R and compares it with the Central Limit Theorem. The mean of an exponential distribution is 1/lambda and the standard deviation is also 1/lambda.
 
@@ -26,7 +26,7 @@ Using a simulation of `r n` samples, the original exponential distribution for p
 set.seed(35)
 samples <- rexp(n, lambda)
 ```
-```{r distr.display, fig.height=4}
+```{r distr.display, fig.height=3.5, fig.width=6}
 meanlabel <- paste(" mean=",round(mean(samples),2),sep="")
 gg <- qplot(samples) + 
     geom_vline(xintercept=mean(samples), color="red") + 
@@ -48,7 +48,7 @@ set.seed(19)
 for (i in 1:n) means <- c(means, mean(rexp(n_samples,lambda)))
 ```
 
-```{r means.display, fig.height=4}
+```{r means.display, fig.height=3.5, fig.width=6}
 mean_means <- mean(means)
 sd_means <- mean(means) + c(-1,1)*sd(means)
 
