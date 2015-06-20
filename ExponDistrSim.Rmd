@@ -7,3 +7,82 @@ output:
     keep_md: yes
   word_document: default
 ---
+As part of the Statistical Inference class on Coursera, this project investigates the exponential distribution in R and compares it with the Central Limit Theorem. The mean of an exponential distribution is 1/lambda and the standard deviation is also 1/lambda.
+
+## Project Setup
+```{r setup, results='hide'}
+library(ggplot2)
+setwd("~/../datascience/StatisticalInferenceProject")
+
+lambda <- .2
+n <- 1000
+n_samples <- 40
+```
+
+## Distribution of `r n` expontially distributed samples
+Using a simulation of `r n` samples, the original exponential distribution for paramaeter lambda set to `r lambda` looks like this:
+
+```{r distr.simulate}
+set.seed(35)
+samples <- rexp(n, lambda)
+```
+```{r distr.display, fig.height=4}
+meanlabel <- paste(" mean=",round(mean(samples),2),sep="")
+gg <- qplot(samples) + 
+    geom_vline(xintercept=mean(samples), color="red") + 
+    geom_text(aes(x=mean(samples), y=0, label=meanlabel),
+              colour="red", vjust=1, hjust=0, size=3) +
+    labs(x="sample values") + 
+    labs(title=paste("Histogram of", n, "samples from the Exponential",
+                     "Distribution"))
+print(gg)
+```
+
+Note the mean does in fact approximate the theoretical mean of 1/lambda = `r 1/lambda`.
+
+## Distribution of `r n` sample means
+We can now compare the exponential distribution with the distribution of its sample means. The following simulation builds an exponential distribution from `r n` sample means, with sample size of `r n_samples`. 
+```{r means.simulate}
+means <- NULL # bad memory management, consider preallocating
+set.seed(19)
+for (i in 1:n) means <- c(means, mean(rexp(n_samples,lambda)))
+```
+
+```{r means.display, fig.height=4}
+mean_means <- mean(means)
+sd_means <- mean(means) + c(-1,1)*sd(means)
+
+meanlabel <- paste(" mean=", round(mean_means,2),sep="")
+sdlabel <- c(paste(" sd=",round(mean_means,2), "-", 
+                   round(sd(means),2),sep=""), 
+             paste(" sd=",round(mean_means,2), "+", 
+                   round(sd(means),2),sep=""))
+df <- data.frame(x = means)
+gg <- ggplot(df, aes(x = x)) + 
+    geom_histogram(aes(y = ..density..)) +
+    geom_vline(xintercept=mean_means, color="red") + 
+    geom_text(aes(x=mean(means), y=0, label=meanlabel),
+              colour="red", vjust=1, hjust=0, size=3) +
+    geom_vline(xintercept=sd_means, color="blue") + 
+    geom_text(aes(x=sd_means[1], y=0, label=sdlabel[1]),
+              colour="blue", vjust=1, hjust=0, size=3) + 
+    geom_text(aes(x=sd_means[2], y=0, label=sdlabel[2]),
+              colour="blue", vjust=1, hjust=0, size=3) + 
+    stat_function(geom="line", fun=dnorm, colour = "green",
+                  arg=list(mean=mean(means), sd=sd(means))) +
+    labs(x="sample values") + 
+    labs(title=paste("Histogram of", n, "sample means \nfrom the Exponential",
+                     "Distribution with sample size of", n_samples))
+print(gg)
+```
+
+Exponential distributions do in fact follow the central limit theorem. Compared to the previous plot, the above plot shows an approximately gaussian distribution (shown in green). 
+
+The sample mean is `r round(mean(means),2)` which is a very close approximation to the theoretical mean of the distribution:
+```{r}
+1/lambda
+```
+The sample standard deviation is `r round(sd(means),3)` which is also a very close approximation of the theoretical standard deviation of the distribution:
+```{r}
+round((1/lambda)/sqrt(n_samples),3)
+```
