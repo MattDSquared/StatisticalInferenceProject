@@ -45,7 +45,17 @@ ToothStats <- ToothGrowth %>%
               lbound=mean_length-qt(.975,df)*sd_length,
               ubound=mean_length+qt(.975,df)*sd_length)
 ```
+
+The statistics for this data set are shown below.
+
+```{r xploratory.table}
+kable(ToothStats, format="markdown", digits = 2,
+      col.names=c("Suppliment","Dosage (mg)","Mean Length","Std Dev Length",
+                  "95% Interval, Lower","95% Interval, Upper"))
+```
+
 The below plot shows how tooth length varies by suppliment type and dosage. The line plot connects the group means, with the 95% confidence interval shown in grey.
+
 ```{r exploratory.display, fig.width=8}
 gg <- ggplot() +
     facet_grid(. ~ suppliment) +

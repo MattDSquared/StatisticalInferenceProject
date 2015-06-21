@@ -5,7 +5,7 @@ Saturday, June 20, 2015
 ## Question
 By looking at the R datasets package for ToothGrowth, does the type of suppliment used for vitamin C delivery have an effect on tooth growth in guinea pigs?
 
-_This project is a part of the Coursera Statistical Inference Class_
+_This project is a part of the Coursera Statistical Inference Class._
 
 ## Project Setup
 
@@ -41,7 +41,29 @@ ToothStats <- ToothGrowth %>%
               lbound=mean_length-qt(.975,df)*sd_length,
               ubound=mean_length+qt(.975,df)*sd_length)
 ```
+
+The statistics for this data set are shown below.
+
+
+```r
+kable(ToothStats, format="markdown", digits = 2,
+      col.names=c("Suppliment","Dosage (mg)","Mean Length","Std Dev Length",
+                  "95% Interval, Lower","95% Interval, Upper"))
+```
+
+
+
+|Suppliment    | Dosage (mg)| Mean Length| Std Dev Length| 95% Interval, Lower| 95% Interval, Upper|
+|:-------------|-----------:|-----------:|--------------:|-------------------:|-------------------:|
+|Orange Juice  |         0.5|       13.23|           4.46|                3.14|               23.32|
+|Orange Juice  |         1.0|       22.70|           3.91|               13.85|               31.55|
+|Orange Juice  |         2.0|       26.06|           2.66|               20.05|               32.07|
+|Ascorbic Acid |         0.5|        7.98|           2.75|                1.77|               14.19|
+|Ascorbic Acid |         1.0|       16.77|           2.52|               11.08|               22.46|
+|Ascorbic Acid |         2.0|       26.14|           4.80|               15.29|               36.99|
+
 The below plot shows how tooth length varies by suppliment type and dosage. The line plot connects the group means, with the 95% confidence interval shown in grey.
+
 
 ```r
 gg <- ggplot() +
