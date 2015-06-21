@@ -127,4 +127,4 @@ kable(t.stats, format="markdown", digits = 3,
 ```
 
 ## Conclusion
-The t-tests show two things. First, there is a significant difference between each dosage level under all circumstances. Second, at a dosage level of 0.5 and 1.0 mg, Orange Juice has a significantly greater effect on increasing tooth growth than Ascorbic Acid. However, at a dosage level of 2.0 mg, there is no significant difference between the two supplements. With this information we can certainly decide H~a~, supplement type has an effect on tooth growth, but only at certain dosage levels.
+The t-tests show two things. First, the difference between dosage levels is significant to a maximum p-value of 4% for all groups. Second, at a dosage level of 0.5 and 1.0 mg, Orange Juice has a significantly greater effect on increasing tooth growth than Ascorbic Acid (p-value < 1%). However, at a dosage level of 2.0 mg, there is no significant difference between the two supplements. With this information we can decide H~a~, supplement type has an effect on tooth growth, but only at certain dosage levels.
