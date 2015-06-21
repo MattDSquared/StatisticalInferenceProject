@@ -1,0 +1,121 @@
+---
+title: "Does the Type of Vitamin C Supplement Affect Tooth Growth?"
+author: "MattDSquared"
+date: "Saturday, June 20, 2015"
+output:
+  word_document: default
+  html_document:
+    keep_md: yes
+---
+
+## Question
+By looking at the R datasets package for ToothGrowth, does the type of supplement used for vitamin C delivery have an effect on tooth growth in guinea pigs?
+
+_This project is a part of the Coursera Statistical Inference Class._
+
+## Project Setup
+
+The original data set (as found by calling `?ToothGrowth` from Rstudio) comes from a study by C. I. Bliss focusing on length of odontoblasts (teeth) in each of 10 guinea pigs at each of three dose levels of Vitamin C (0.5, 1, and 2 mg) with each of two delivery methods (orange juice or ascorbic acid).
+
+```{r setup, message=FALSE}
+library(datasets)
+library(ggplot2)
+library(plyr); library(dplyr)
+library(knitr)
+data(ToothGrowth) # loads ToothGrowth data frame
+
+# rename variables for plotting clarity
+names(ToothGrowth) <- c("length","supplement","dose")
+
+# assign more clear supplement labels
+ToothGrowth$supplement <- factor(ToothGrowth$supplement, levels=c("OJ","VC"), labels=c("Orange Juice", "Ascorbic Acid"))
+
+# number of guinea pigs per sample
+n <- 10
+```
+
+## Exploratory Analysis
+What are the general trends in tooth length vs supplement delivery method and dosage? Let's assume the underlying distribution is iid normally distributed and the confidence bounds of any `r n`-guinea-pig group can be explained by a t distribution with degrees of freedom, n-1=`r df`. 
+
+```{r exploratory}
+df <- n-1
+ToothStats <- ToothGrowth %>% 
+    group_by(supplement,dose) %>%
+    summarize(mean_length = mean(length), sd_length=sd(length), 
+              lbound=mean_length-qt(.975,df)*sd_length,
+              ubound=mean_length+qt(.975,df)*sd_length)
+```
+
+The plot below shows how tooth length varies by supplement type and dosage. The line plot connects the group means, with the 95% confidence interval shown in grey.
+
+```{r exploratory.display, fig.height=3.3, fig.width=6.5, echo=FALSE}
+gg <- ggplot() +
+    facet_grid(. ~ supplement) +
+    geom_point(data=ToothGrowth, 
+               aes(x=dose,y=length, color=supplement)) +
+    geom_line(data = ToothStats, 
+              aes(x=dose, y=mean_length, color=supplement)) +
+#    geom_errorbar(data = ToothStats, 
+#                  aes(x=dose, ymin=lbound, ymax=ubound)) +
+    geom_ribbon(data = ToothStats, 
+                  aes(x=dose, ymin=lbound, ymax=ubound), 
+                alpha=.3) +
+    labs(title="Effect of vitamin C Supplements on Tooth Growth") +
+    labs(x="Dosage Size [mg]") +
+    labs(y="Tooth Length")
+print(gg)
+```
+
+It certainly appears that orange juice does improve tooth growth on average, however let's use t-tests to understand if these differences are significant. 
+
+## Significance of Supplement type by dose on length of tooth
+The objective of this study is to determine whether or not one supplement significantly increases tooth growth over the other at a given dosage. Or more formally:
+
+H~0~: Supplement type has no effect on tooth length at any dosage level.  
+H~a~: Supplement type has a non-zero effect on tooth length at any dosage level.  
+
+As stated earlier, assume the underlying distribution is iid normal, with the t distribution able to explain the distribution of this small sample size. 
+
+```{r t.test.group}
+# t-test for dosage significance
+dose.t.test <- function(dose1, dose2, supp=c("Orange Juice","Ascorbic Acid")) {
+    dat  <- filter(ToothGrowth, (dose %in% c(dose1,dose2)) & 
+                       (supplement %in% supp))
+    dose.t <- t.test(data = dat, length ~ dose, 
+                     paired = FALSE, var.equal = FALSE)
+    case.name <- paste(paste(supp, collapse=", "),": dosage ", dose1,
+                       " - ",dose2, sep="")
+    dose.t <- with(dose.t, 
+                   data.frame(statistic, parameter, p.value, conf.int[1], 
+                              conf.int[2],row.names=case.name))
+    names(dose.t) <- c("t","df","p.value","conf.int.l","conf.int.u")
+    dose.t
+}
+
+# t-test for supplement groups between each dosage
+supp.t.test <- function(dosage) {
+    supp.t <- t.test(data = filter(ToothGrowth, dose == dosage), 
+                     length ~ supplement, 
+                     paired = FALSE, var.equal = FALSE)
+    case.name <- paste("dosage:",dosage, ", OJ - AA", sep="")
+    supp.t <- with(supp.t, 
+                   data.frame(statistic, parameter, p.value, conf.int[1], 
+                              conf.int[2], row.names=case.name))
+    names(supp.t) <- c("t","df","p.value","conf.int.l","conf.int.u")
+    supp.t
+}
+
+t.stats <- rbind(dose.t.test(.5,1), dose.t.test(1,2), 
+                 dose.t.test(1,2,"Orange Juice"), 
+                 dose.t.test(1,2,"Ascorbic Acid"),
+                 supp.t.test(.5), supp.t.test(1), supp.t.test(2))
+```
+The table below shows the t test for significance between different dosage levels as well as between Orange Juice and Ascorbic Acid supplement (in that order) for each dosage level. 
+```{r t.test.table, echo=FALSE}
+kable(t.stats, format="markdown", digits = 3,
+      col.names=c("t statistic","df","p-value",
+                  "95% t-interval, lower","95% t-interval, upper"))
+```
+
+## Conclusion
+The t-tests show two things. First, the difference between dosage levels is significant to a maximum p-value of 4% for all groups. Second, at a dosage level of 0.5 and 1.0 mg, Orange Juice has a significantly greater effect on increasing tooth growth than Ascorbic Acid (p-value < 1%). However, at a dosage level of 2.0 mg, there is no significant difference between the two supplements. With this information we can decide H~a~, supplement type has an effect on tooth growth, but only at certain dosage levels.
