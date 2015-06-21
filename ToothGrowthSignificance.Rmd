@@ -12,7 +12,7 @@ By looking at the R datasets package for ToothGrowth, determine vitamin C has a 
 
 The original data set (as found by calling ?ToothGrowth from Rstudio) comes from a study by C. I. Bliss focusing on length of odontoblasts (teeth) in each of 10 guinea pigs at each of three dose levels of Vitamin C (0.5, 1, and 2 mg) with each of two delivery methods (orange juice or ascorbic acid).
 
-```{r setup}
+```{r setup, message=FALSE}
 library(datasets)
 library(ggplot2)
 library(plyr); library(dplyr)
@@ -24,26 +24,30 @@ names(ToothGrowth) <- c("length","suppliment","dose")
 # assign more clear suppliment labels
 ToothGrowth$suppliment <- factor(ToothGrowth$suppliment, levels=c("OJ","VC"), labels=c("Orange Juice", "Ascorbic Acid"))
 
+# number of guinea pigs per sample
+n <- 10
 ```
 
 ## Exploratory Analysis
-Let's explore the data, what are the general trends in tooth length vs suppliment delivery method? Let's assume the underlying distribution is iid normally distributed. 
+Let's explore the data, what are the general trends in tooth length vs suppliment delivery method and dosage? This is a biological process, which are generally normally distributed. Let's assume the underlying distribution is iid normally distributed and the confidence bounds of any `r n`-guinea-pig group can be explained by a t distribution with degrees of freedom, n-1=`r df`. 
 
 ```{r exploratory}
+df <- n-1
 ToothStats <- ToothGrowth %>% 
     group_by(suppliment,dose) %>%
     summarize(mean_length = mean(length), sd_length=sd(length), 
-              lbound=mean_length-1.645*sd_length,
-              ubound=mean_length+1.645*sd_length)
-
+              lbound=mean_length-qt(.975,df)*sd_length,
+              ubound=mean_length+qt(.975,df)*sd_length)
+```
+```{r exploratory.display, fig.width=6}
 gg <- ggplot() +
     facet_grid(. ~ suppliment) +
     geom_point(data=ToothGrowth, 
                aes(x=dose,y=length, color=suppliment)) +
     geom_line(data = ToothStats, 
               aes(x=dose, y=mean_length, color=suppliment)) +
-    geom_errorbar(data = ToothStats, 
-                  aes(x=dose, ymin=lbound, ymax=ubound)) +
+#    geom_errorbar(data = ToothStats, 
+#                  aes(x=dose, ymin=lbound, ymax=ubound)) +
     geom_ribbon(data = ToothStats, 
                   aes(x=dose, ymin=lbound, ymax=ubound), 
                 alpha=.3) +
