@@ -5,3 +5,50 @@ date: "Saturday, June 20, 2015"
 output: word_document
 ---
 
+## Question
+By looking at the R datasets package for ToothGrowth, determine vitamin C has a significant impact on tooth size in Guinea Pigs? 
+
+## Project Setup
+
+The original data set (as found by calling ?ToothGrowth from Rstudio) comes from a study by C. I. Bliss focusing on length of odontoblasts (teeth) in each of 10 guinea pigs at each of three dose levels of Vitamin C (0.5, 1, and 2 mg) with each of two delivery methods (orange juice or ascorbic acid).
+
+```{r setup}
+library(datasets)
+library(ggplot2)
+library(plyr); library(dplyr)
+data(ToothGrowth) # loads ToothGrowth data frame
+
+# rename variables for plotting clarity
+names(ToothGrowth) <- c("length","suppliment","dose")
+
+# assign more clear suppliment labels
+ToothGrowth$suppliment <- factor(ToothGrowth$suppliment, levels=c("OJ","VC"), labels=c("Orange Juice", "Ascorbic Acid"))
+
+```
+
+## Exploratory Analysis
+Let's explore the data, what are the general trends in tooth length vs suppliment delivery method? Let's assume the underlying distribution is iid normally distributed. 
+
+```{r exploratory}
+ToothStats <- ToothGrowth %>% 
+    group_by(suppliment,dose) %>%
+    summarize(mean_length = mean(length), sd_length=sd(length), 
+              lbound=mean_length-1.645*sd_length,
+              ubound=mean_length+1.645*sd_length)
+
+gg <- ggplot() +
+    facet_grid(. ~ suppliment) +
+    geom_point(data=ToothGrowth, 
+               aes(x=dose,y=length, color=suppliment)) +
+    geom_line(data = ToothStats, 
+              aes(x=dose, y=mean_length, color=suppliment)) +
+    geom_errorbar(data = ToothStats, 
+                  aes(x=dose, ymin=lbound, ymax=ubound)) +
+    geom_ribbon(data = ToothStats, 
+                  aes(x=dose, ymin=lbound, ymax=ubound), 
+                alpha=.3) +
+    labs(title="Effect of vitamin C suppliments on Tooth Growth") +
+    labs(x="Dosage Size [mg]") +
+    labs(y="Tooth Length")
+print(gg)
+```
